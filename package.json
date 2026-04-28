@@ -1,0 +1,105 @@
+{
+  "name": "ddd-documentation-first",
+  "displayName": "Documentation First",
+  "description": "Documentation-Driven Development — gérez votre contexte AI directement dans l'IDE.",
+  "version": "2.0.0",
+  "publisher": "documentationfirst",
+  "author": "Documentation First <contact@documentationfirst.ai>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/documentationfirst/plugin-vscode"
+  },
+  "homepage": "https://documentationfirst.ai",
+  "icon": "assets/ddd-ai.png",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": ["Other", "Snippets"],
+  "keywords": ["documentation", "ai", "context", "markdown", "ddd"],
+  "activationEvents": [
+    "workspaceContains:**/.ai_context/**",
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ddd.initContext",
+        "title": "Documentation First: Initialize Context",
+        "icon": "$(add)"
+      },
+      {
+        "command": "ddd.newContext",
+        "title": "New Context",
+        "icon": "$(add)"
+      },
+      {
+        "command": "ddd.newDocument",
+        "title": "Documentation First: New Document",
+        "icon": "$(file-add)"
+      },
+      {
+        "command": "ddd.refresh",
+        "title": "Documentation First: Refresh",
+        "icon": "$(sync)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ddd-sidebar",
+          "title": "Documentation First",
+          "icon": "assets/ddd-ai.png"
+        }
+      ]
+    },
+    "views": {
+      "ddd-sidebar": [
+        {
+          "id": "dddExplorer",
+          "name": "Documents",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "id": "dddContextPanel",
+          "type": "webview",
+          "name": "Context",
+          "when": "workspaceFolderCount > 0"
+        }
+      ]
+    },
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "ddd.newDocument",
+          "when": "view == dddExplorer && viewItem == dddFolder",
+          "group": "inline"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile:prod",
+    "compile": "node esbuild.mjs",
+    "compile:prod": "NODE_ENV=production node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "package": "vsce package",
+    "publish": "vsce publish",
+    "test": "vscode-test",
+    "lint": "eslint src"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^8.58.2",
+    "@typescript-eslint/parser": "^8.58.2",
+    "@vscode/test-cli": "^0.0.9",
+    "@vscode/test-electron": "^2.3.9",
+    "@vscode/vsce": "^2.26.0",
+    "esbuild": "^0.21.0",
+    "eslint": "^9.39.4",
+    "typescript": "^5.4.0"
+  }
+}
