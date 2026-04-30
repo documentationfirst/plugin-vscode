@@ -59,9 +59,7 @@ export class DddTreeProvider implements vscode.TreeDataProvider<DddTreeItem> {
 
   getChildren(element?: DddTreeItem): vscode.ProviderResult<DddTreeItem[]> {
     const aiContextRoot = aiContextPath();
-    const documentsRoot = aiContextRoot ? path.join(aiContextRoot, 'documents') : undefined;
-
-    if (!documentsRoot || !fs.existsSync(documentsRoot)) {
+    if (!aiContextRoot) {
       return [
         new DddTreeItem(
           'No .ai_context found — run: Initialize Context below',
@@ -71,8 +69,29 @@ export class DddTreeProvider implements vscode.TreeDataProvider<DddTreeItem> {
       ];
     }
 
-    const dirToRead = element ? element.fullPath : documentsRoot;
+    // Root level: show documents/ and skills/
+    if (!element) {
+      const items: DddTreeItem[] = [];
+      const documentsPath = path.join(aiContextRoot, 'documents');
+      if (fs.existsSync(documentsPath)) {
+        items.push(new DddTreeItem(
+          documentsPath,
+          true,
+          vscode.TreeItemCollapsibleState.Expanded
+        ));
+      }
+      const skillsPath = path.join(aiContextRoot, 'skills');
+      if (fs.existsSync(skillsPath)) {
+        items.push(new DddTreeItem(
+          skillsPath,
+          true,
+          vscode.TreeItemCollapsibleState.Expanded
+        ));
+      }
+      return items;
+    }
 
+    const dirToRead = element.fullPath;
     if (!fs.statSync(dirToRead).isDirectory()) { return []; }
 
     const entries = fs.readdirSync(dirToRead, { withFileTypes: true });

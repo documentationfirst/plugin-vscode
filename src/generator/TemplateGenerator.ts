@@ -40,6 +40,7 @@ A file in \`technical/\` or \`specification/\` prefixed with \`permanent-\`
 ├── CONTEXT.md             ← objective and todo list (contextual)
 ├── context.json           ← machine metadata (contextual)
 ├── history.log            ← past contexts journal (permanent)
+├── skills/                ← skills and competencies (permanent-* kept)
 └── documents/
     ├── done/              ← agent summaries (contextual)
     ├── specification/     ← functional specs (permanent-* kept)
@@ -193,6 +194,9 @@ export class TemplateGenerator {
       const gitkeep = path.join(aiContextRoot, 'documents', sub, '.gitkeep');
       if (!fs.existsSync(gitkeep)) { writeFile(gitkeep, ''); }
     }
+    ensureDir(path.join(aiContextRoot, 'skills'));
+    const skillsGitkeep = path.join(aiContextRoot, 'skills', '.gitkeep');
+    if (!fs.existsSync(skillsGitkeep)) { writeFile(skillsGitkeep, ''); }
 
     const readmePath = path.join(aiContextRoot, 'README.md');
     if (!fs.existsSync(readmePath)) { writeFile(readmePath, AI_CONTEXT_README); }
@@ -250,9 +254,9 @@ The current development context is presented in CONTEXT.md and all files in the 
       });
     }
 
-    // Clear specification/ and technical/ except permanent-*
-    for (const sub of ['specification', 'technical']) {
-      const subDir = path.join(aiContextRoot, 'documents', sub);
+    // Clear specification/, technical/, and skills/ except permanent-*
+    for (const sub of ['specification', 'technical', 'skills']) {
+      const subDir = sub === 'skills' ? path.join(aiContextRoot, sub) : path.join(aiContextRoot, 'documents', sub);
       if (fs.existsSync(subDir)) {
         fs.readdirSync(subDir).forEach((f: string) => {
           if (f !== '.gitkeep' && !f.startsWith('permanent-')) {
