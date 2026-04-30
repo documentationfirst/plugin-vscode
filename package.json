@@ -19,7 +19,9 @@
   "keywords": ["documentation", "ai", "context", "markdown", "ddd"],
   "activationEvents": [
     "workspaceContains:**/.ai_context/**",
-    "onStartupFinished"
+    "onStartupFinished",
+    "onView:dddContextPanel",
+    "onView:dddExplorer"
   ],
   "main": "./dist/extension.js",
   "contributes": {

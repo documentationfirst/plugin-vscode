@@ -25,7 +25,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const aiCtx = aiContextPath();
     const initialized = !!(aiCtx && fs.existsSync(aiCtx));
     vscode.commands.executeCommand('setContext', 'ddd.initialized', initialized);
-    vscode.commands.executeCommand('setContext', 'ddd.initialized', initialized);
     contextPanel.refresh();
   };
   updateInitState();

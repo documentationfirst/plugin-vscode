@@ -19,6 +19,13 @@ export class ContextPanel implements vscode.WebviewViewProvider {
     webviewView.webview.options = { enableScripts: true };
     webviewView.webview.html = this._getHtml();
 
+    // Re-render when the panel becomes visible (e.g. user opens the sidebar)
+    webviewView.onDidChangeVisibility(() => {
+      if (webviewView.visible) {
+        this._view!.webview.html = this._getHtml();
+      }
+    });
+
     webviewView.webview.onDidReceiveMessage((msg: { command: string; task: string; done: boolean }) => {
       if (msg.command === 'toggleTodo') {
         this._toggleTodo(msg.task, msg.done);
