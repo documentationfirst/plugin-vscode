@@ -6,6 +6,7 @@ import { ContextPanel } from './webview/ContextPanel';
 import { initContext } from './commands/initContext';
 import { newContext } from './commands/newContext';
 import { newDocument } from './commands/newDocument';
+import { newSkill } from './commands/newSkill';
 import { aiContextPath } from './utils/fileUtils';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
@@ -50,6 +51,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         newDocument(targetDir, treeProvider);
       }
     }),
+    vscode.commands.registerCommand('ddd.newSkill', () =>
+      newSkill(treeProvider)
+    ),
     vscode.commands.registerCommand('ddd.refresh', () => {
       treeProvider.refresh();
       contextPanel.refresh();

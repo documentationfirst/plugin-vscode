@@ -1,55 +1,62 @@
-# DDD Plugin — VSCode — Functional Specifications
+# Spécification fonctionnelle — Dossier `skills/`
 
-## Purpose
-
-Give any VSCode-based editor user a native DDD experience.
-Compatible with: **VSCode, Cursor, Windsurf, VSCodium**
+*Créé : 2026-04-30*
 
 ---
 
-## User Stories
+## Objectif
 
-### US-01 — Project detection
-- [ ] `ai_md_files/` exists → status bar "DDD Ready ✅" for 5s
-- [ ] Missing → notification: "No DDD context found. [Initialize] [Later]"
-
-### US-02 — Project initialization
-- [ ] Detects stack from `package.json`, `pom.xml`, `Cargo.toml`, etc.
-- [ ] Creates `best-practices.md` pre-filled for the detected stack
-- [ ] Creates `docs/`, `features/`, `migrations/` folders
-- [ ] Creates `README_AI.md` at project root with the AI agent interaction contract (prohibitions, permissions, checklist, reference links) — only if not already present
-- [ ] Opens `best-practices.md` automatically
-
-### US-03 — New Feature Context
-- [ ] Available via: Command Palette, right-click Explorer, DDD panel
-- [ ] Quick input for feature name (e.g. "authentication")
-- [ ] Creates `ai_md_files/features/{name}/specs-functional.md`, `specs-technical.md`, `DONE.md`
-- [ ] Opens `specs-functional.md` automatically
-
-### US-04 — New Migration Plan
-- [ ] Quick input for migration name (e.g. "angular-21")
-- [ ] Creates `ai_md_files/migrations/{name}/migration-plan.md`, `MIGRATION_DONE.md`
-- [ ] Opens `migration-plan.md` automatically
-
-### US-05 — DDD Explorer Panel
-- [ ] Shows tree of `ai_md_files/` with icons per file type
-- [ ] Clicking a file opens it in the editor
-- [ ] Action buttons: `+ Feature`, `+ Migration`
-
-### US-06 — Generate Agent Files
-- [ ] Command: "DDD: Generate Agent Files"
-- [ ] Generates: `.cursorrules`, `CLAUDE.md`, `.github/copilot-instructions.md`, `AGENTS.md`
-- [ ] Each file starts with a "do not edit manually" header
-
-### US-07 — View DONE.md
-- [ ] Opens the nearest `DONE.md` relative to the current file
-- [ ] Opens in a split editor to the right
+Ajouter un dossier `skills/` dans la structure `.ai_context/`, **côte à côte avec `documents/`**,
+afin de permettre à l'équipe de capitaliser des savoir-faire métier et techniques réutilisables
+d'un contexte à l'autre.
 
 ---
 
-## Out of Scope for v1.0
+## Structure cible
 
-- Cursor/Windsurf native API injection (v1.1)
-- DONE.md diff viewer
-- Multi-root workspace support
+```
+.ai_context/
+├── README.md
+├── CONTRACT.md
+├── CONTEXT.md
+├── context.json
+├── history.log
+├── skills/                ← permanent-* conservés entre contextes
+└── documents/
+    ├── done/
+    ├── specification/
+    └── technical/
+```
+
+---
+
+## Comportement attendu
+
+### 1. Initialisation (`scaffoldInit`)
+- Le dossier `skills/` est créé **à la racine de `.ai_context/`** (pas sous `documents/`).
+- Un `.gitkeep` est ajouté pour que le dossier soit tracké par Git.
+
+### 2. Passage de contexte (`scaffoldNewContext`)
+- Les fichiers de `skills/` dont le nom commence par `permanent-` sont **conservés**.
+- Les autres fichiers de `skills/` sont **supprimés** (comme pour `specification/` et `technical/`).
+
+### 3. Arborescence (tree view)
+- `skills/` apparaît comme nœud racine dans l'arborescence, **au même niveau que `documents/`**.
+- Un clic droit sur `skills/` (ou sur n'importe quel sous-dossier) déclenche la commande `ddd.newDocument`.
+- Les fichiers `permanent-*` sont affichés avec l'icône bookmark violet.
+
+### 4. Cohérence entre les deux plugins
+- Le plugin **IntelliJ** et le plugin **VSCode** doivent produire la même structure sur disque.
+- Le plugin VSCode utilise la commande générique `ddd.newDocument` (appliquée à tout dossier) — pas besoin de commande dédiée `ddd.newSkill`.
+
+---
+
+## Règles métier
+
+| Règle | Détail |
+|---|---|
+| Position | `skills/` est à la racine de `.ai_context/`, pas dans `documents/` |
+| Convention `permanent-` | Un fichier `permanent-foo.md` dans `skills/` survit aux changements de contexte |
+| Pas de sous-dossiers imposés | `skills/` est un dossier plat (pas de `done/`, `specification/`, `technical/` dedans) |
+| Comportement identique entre plugins | IntelliJ et VSCode produisent la même structure |
 

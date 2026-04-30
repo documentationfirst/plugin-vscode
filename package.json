@@ -44,6 +44,11 @@
         "icon": "$(file-add)"
       },
       {
+        "command": "ddd.newSkill",
+        "title": "Documentation First: New Skill",
+        "icon": "$(mortar-board)"
+      },
+      {
         "command": "ddd.refresh",
         "title": "Documentation First: Refresh",
         "icon": "$(sync)"
@@ -78,6 +83,11 @@
         {
           "command": "ddd.newDocument",
           "when": "view == dddExplorer && viewItem == dddFolder",
+          "group": "inline"
+        },
+        {
+          "command": "ddd.newSkill",
+          "when": "view == dddExplorer && viewItem == dddSkillsFolder",
           "group": "inline"
         }
       ]

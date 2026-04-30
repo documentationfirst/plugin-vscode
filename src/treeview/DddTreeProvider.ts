@@ -37,8 +37,9 @@ export class DddTreeItem extends vscode.TreeItem {
         this.iconPath = new vscode.ThemeIcon('markdown');
       }
     } else {
-      this.iconPath = new vscode.ThemeIcon('folder');
-      this.contextValue = 'dddFolder';
+      const isSkillsFolder = path.basename(fullPath) === 'skills';
+      this.iconPath = new vscode.ThemeIcon(isSkillsFolder ? 'mortar-board' : 'folder');
+      this.contextValue = isSkillsFolder ? 'dddSkillsFolder' : 'dddFolder';
     }
   }
 }
