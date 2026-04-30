@@ -64,7 +64,7 @@ export class DddTreeProvider implements vscode.TreeDataProvider<DddTreeItem> {
     if (!documentsRoot || !fs.existsSync(documentsRoot)) {
       return [
         new DddTreeItem(
-          'No .ai_context/ found — run: Initialize Context',
+          'No .ai_context found — run: Initialize Context below',
           false,
           vscode.TreeItemCollapsibleState.None
         )

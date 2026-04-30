@@ -12,6 +12,10 @@
   },
   "homepage": "https://documentationfirst.ai",
   "icon": "assets/ddd-ai.png",
+  "files": [
+    "dist",
+    "assets/ddd-ai.png"
+  ],
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -19,9 +23,7 @@
   "keywords": ["documentation", "ai", "context", "markdown", "ddd"],
   "activationEvents": [
     "workspaceContains:**/.ai_context/**",
-    "onStartupFinished",
-    "onView:dddContextPanel",
-    "onView:dddExplorer"
+    "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "contributes": {
