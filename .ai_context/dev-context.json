@@ -1,0 +1,33 @@
+{
+  "vision": "Build the reference IDE extension for Documentation-Driven Development: a lightweight, agent-agnostic VSCode plugin that scaffolds and manages the `.ai_context/` folder, turning project documentation into the primary interface between developers and AI agents.",
+  "steps": [
+    {
+      "name": "Phase 1 — Core structure",
+      "description": "Init command, tree view, basic templates, dev-context.json, skills/, steps/",
+      "done": true
+    },
+    {
+      "name": "Phase 2 — Context panel",
+      "description": "Webview sidebar showing vision, steps progress, active task and todos",
+      "done": false
+    },
+    {
+      "name": "Phase 3 — Marketplace release",
+      "description": "Package, publish, README, changelog",
+      "done": false
+    }
+  ],
+  "task": {
+    "title": "Fix & stabilize New Task / New Vision commands",
+    "description": "Migrate from context.json to dev-context.json, fix command registration, align ContextPanel with new data model",
+    "startedAt": "2026-05-16T00:00:00.000Z",
+    "todos": [
+      { "text": "Fix ddd.newContext → ddd.newTask command registration", "done": true },
+      { "text": "Rename context.json → dev-context.json with enriched structure", "done": true },
+      { "text": "Store todos in dev-context.json (not CONTEXT.md)", "done": true },
+      { "text": "Show steps with done/pending state in ContextPanel", "done": true },
+      { "text": "Recompile and test New Task end-to-end", "done": false }
+    ]
+  }
+}
+

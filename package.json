@@ -34,9 +34,14 @@
         "icon": "$(add)"
       },
       {
-        "command": "ddd.newContext",
-        "title": "New Context",
-        "icon": "$(add)"
+        "command": "ddd.newVision",
+        "title": "Documentation First: New Vision",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "ddd.newTask",
+        "title": "Documentation First: New Tasks",
+        "icon": "$(tasklist)"
       },
       {
         "command": "ddd.newDocument",

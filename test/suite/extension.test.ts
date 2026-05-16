@@ -15,11 +15,23 @@ function cleanup(dir: string): void {
   fs.rmSync(dir, { recursive: true, force: true });
 }
 
+/** Default scaffoldInit with all required params */
+function defaultInit(root: string, taskTitle = 'My Title', taskDesc = 'My Desc'): void {
+  new TemplateGenerator('').scaffoldInit(
+    root, 'strict',
+    'My project context', 'My vision',
+    taskTitle, taskDesc, [], []
+  );
+}
+
 function scaffoldAndGetContract(profile: AgentProfile): string {
   const tmp = makeTmpDir();
   try {
     const aiContextRoot = path.join(tmp, '.ai_context');
-    new TemplateGenerator('').scaffoldInit(aiContextRoot, profile, 'Test', 'Desc', []);
+    new TemplateGenerator('').scaffoldInit(
+      aiContextRoot, profile,
+      'Test project context', 'Test vision', 'First task', 'Desc', [], []
+    );
     return fs.readFileSync(path.join(aiContextRoot, 'CONTRACT.md'), 'utf8');
   } finally {
     cleanup(tmp);
@@ -102,50 +114,90 @@ suite('DddDetector', () => {
 // ─── TemplateGenerator — scaffoldInit ────────────────────────────────────────
 
 suite('TemplateGenerator — scaffoldInit', () => {
-  test('creates full .ai_context structure', () => {
+  test('creates full .ai_context structure with tasks/, steps/, skills/', () => {
     const tmp = makeTmpDir();
     try {
       const root = path.join(tmp, '.ai_context');
-      new TemplateGenerator('').scaffoldInit(root, 'strict', 'Mon contexte', 'Desc', ['Tâche 1']);
+      defaultInit(root);
 
       assert.ok(fs.existsSync(root));
       assert.ok(fs.existsSync(path.join(root, 'README.md')));
       assert.ok(fs.existsSync(path.join(root, 'CONTRACT.md')));
       assert.ok(fs.existsSync(path.join(root, 'CONTEXT.md')));
       assert.ok(fs.existsSync(path.join(root, 'context.json')));
-      assert.ok(fs.existsSync(path.join(root, 'documents', 'done')));
-      assert.ok(fs.existsSync(path.join(root, 'documents', 'specification')));
-      assert.ok(fs.existsSync(path.join(root, 'documents', 'technical')));
+      assert.ok(fs.existsSync(path.join(root, 'vision.md')));
+      assert.ok(fs.existsSync(path.join(root, 'tasks', 'done')));
+      assert.ok(fs.existsSync(path.join(root, 'tasks', 'specification')));
+      assert.ok(fs.existsSync(path.join(root, 'tasks', 'technical')));
+      assert.ok(fs.existsSync(path.join(root, 'skills')));
+      assert.ok(fs.existsSync(path.join(root, 'steps')));
     } finally {
       cleanup(tmp);
     }
   });
 
-  test('writes correct title and todos in CONTEXT.md', () => {
+  test('writes projectContext in CONTEXT.md (permanent)', () => {
     const tmp = makeTmpDir();
     try {
       const root = path.join(tmp, '.ai_context');
-      new TemplateGenerator('').scaffoldInit(root, 'strict', 'Refonte auth', 'Objectif', ['Étape 1', 'Étape 2']);
+      new TemplateGenerator('').scaffoldInit(
+        root, 'strict',
+        'Refonte auth context', 'Ma vision', 'Task title', 'Objective', [], []
+      );
 
       const content = fs.readFileSync(path.join(root, 'CONTEXT.md'), 'utf8');
-      assert.ok(content.includes('Refonte auth'));
-      assert.ok(content.includes('- [ ] Étape 1'));
-      assert.ok(content.includes('- [ ] Étape 2'));
+      assert.ok(content.includes('Refonte auth context'), 'CONTEXT.md should contain projectContext');
     } finally {
       cleanup(tmp);
     }
   });
 
-  test('writes valid context.json', () => {
+  test('writes task title and description in context.json', () => {
     const tmp = makeTmpDir();
     try {
       const root = path.join(tmp, '.ai_context');
-      new TemplateGenerator('').scaffoldInit(root, 'strict', 'My Title', 'My Desc', []);
+      new TemplateGenerator('').scaffoldInit(
+        root, 'strict',
+        'My project context', 'My vision', 'My Title', 'My Desc', [], []
+      );
 
       const json = JSON.parse(fs.readFileSync(path.join(root, 'context.json'), 'utf8'));
       assert.strictEqual(json.title, 'My Title');
       assert.strictEqual(json.description, 'My Desc');
       assert.ok(json.startedAt);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  test('writes vision in vision.md', () => {
+    const tmp = makeTmpDir();
+    try {
+      const root = path.join(tmp, '.ai_context');
+      new TemplateGenerator('').scaffoldInit(
+        root, 'strict',
+        'Context', 'Ship a zero-friction DDD plugin', 'First task', 'Desc', [], []
+      );
+
+      const content = fs.readFileSync(path.join(root, 'vision.md'), 'utf8');
+      assert.ok(content.includes('Ship a zero-friction DDD plugin'));
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  test('creates step files in steps/', () => {
+    const tmp = makeTmpDir();
+    try {
+      const root = path.join(tmp, '.ai_context');
+      new TemplateGenerator('').scaffoldInit(
+        root, 'strict',
+        'Context', 'Vision', 'First task', 'Desc', [],
+        [{ name: 'Phase 1 Core', description: 'Build core' }, { name: 'Phase 2 UI', description: 'Build UI' }]
+      );
+
+      assert.ok(fs.existsSync(path.join(root, 'steps', 'phase-1-core.md')));
+      assert.ok(fs.existsSync(path.join(root, 'steps', 'phase-2-ui.md')));
     } finally {
       cleanup(tmp);
     }
@@ -158,7 +210,7 @@ suite('TemplateGenerator — scaffoldInit', () => {
       fs.mkdirSync(root, { recursive: true });
       fs.writeFileSync(path.join(root, 'CONTRACT.md'), '# Mon contrat personnalisé');
 
-      new TemplateGenerator('').scaffoldInit(root, 'strict', 'Titre', 'Desc', []);
+      defaultInit(root);
 
       assert.strictEqual(fs.readFileSync(path.join(root, 'CONTRACT.md'), 'utf8'), '# Mon contrat personnalisé');
     } finally {
@@ -173,7 +225,7 @@ suite('TemplateGenerator — scaffoldInit', () => {
       fs.mkdirSync(root, { recursive: true });
       fs.writeFileSync(path.join(root, 'README.md'), '# Mon README');
 
-      new TemplateGenerator('').scaffoldInit(root, 'strict', 'Titre', 'Desc', []);
+      defaultInit(root);
 
       assert.strictEqual(fs.readFileSync(path.join(root, 'README.md'), 'utf8'), '# Mon README');
     } finally {
@@ -181,16 +233,19 @@ suite('TemplateGenerator — scaffoldInit', () => {
     }
   });
 
-  test('always overwrites CONTEXT.md', () => {
+  test('does not overwrite existing CONTEXT.md (permanent file)', () => {
     const tmp = makeTmpDir();
     try {
       const root = path.join(tmp, '.ai_context');
       fs.mkdirSync(root, { recursive: true });
-      fs.writeFileSync(path.join(root, 'CONTEXT.md'), '# Ancien contexte');
+      fs.writeFileSync(path.join(root, 'CONTEXT.md'), '# Contexte permanent existant');
 
-      new TemplateGenerator('').scaffoldInit(root, 'strict', 'Nouveau', 'Desc', []);
+      defaultInit(root);
 
-      assert.ok(fs.readFileSync(path.join(root, 'CONTEXT.md'), 'utf8').includes('Nouveau'));
+      assert.ok(
+        fs.readFileSync(path.join(root, 'CONTEXT.md'), 'utf8').includes('Contexte permanent existant'),
+        'CONTEXT.md is permanent — must not be overwritten'
+      );
     } finally {
       cleanup(tmp);
     }
@@ -200,7 +255,7 @@ suite('TemplateGenerator — scaffoldInit', () => {
     const tmp = makeTmpDir();
     try {
       const root = path.join(tmp, '.ai_context');
-      new TemplateGenerator('').scaffoldInit(root, 'strict', 'Titre', 'Desc', []);
+      defaultInit(root);
 
       const readme = fs.readFileSync(path.join(tmp, 'README.md'), 'utf8');
       assert.ok(readme.includes('For AI Agent'));
@@ -216,7 +271,7 @@ suite('TemplateGenerator — scaffoldInit', () => {
       fs.writeFileSync(path.join(tmp, 'README.md'), '# Mon projet existant');
 
       const root = path.join(tmp, '.ai_context');
-      new TemplateGenerator('').scaffoldInit(root, 'strict', 'Titre', 'Desc', []);
+      defaultInit(root);
 
       const content = fs.readFileSync(path.join(tmp, 'README.md'), 'utf8');
       assert.ok(content.includes('For AI Agent'));
@@ -232,7 +287,7 @@ suite('TemplateGenerator — scaffoldInit', () => {
       fs.writeFileSync(path.join(tmp, 'README.md'), '# For AI Agent :\n\nRead all [context](./.ai_context)');
 
       const root = path.join(tmp, '.ai_context');
-      new TemplateGenerator('').scaffoldInit(root, 'strict', 'Titre', 'Desc', []);
+      defaultInit(root);
 
       const content = fs.readFileSync(path.join(tmp, 'README.md'), 'utf8');
       const count = (content.match(/For AI Agent/g) || []).length;
@@ -243,66 +298,66 @@ suite('TemplateGenerator — scaffoldInit', () => {
   });
 });
 
-// ─── TemplateGenerator — scaffoldNewContext ───────────────────────────────────
+// ─── TemplateGenerator — scaffoldNewTask ──────────────────────────────────────
 
-suite('TemplateGenerator — scaffoldNewContext', () => {
-  test('clears done/ directory', () => {
+suite('TemplateGenerator — scaffoldNewTask', () => {
+  test('clears tasks/done/ directory', () => {
     const tmp = makeTmpDir();
     try {
       const root = path.join(tmp, '.ai_context');
-      new TemplateGenerator('').scaffoldInit(root, 'strict', 'Old', 'Desc', []);
-      fs.writeFileSync(path.join(root, 'documents', 'done', 'summary.md'), '# Done');
+      defaultInit(root);
+      fs.writeFileSync(path.join(root, 'tasks', 'done', 'summary.md'), '# Done');
 
-      new TemplateGenerator('').scaffoldNewContext(root, 'New', 'Desc', []);
+      new TemplateGenerator('').scaffoldNewTask(root, '', 'New task', 'Desc', []);
 
-      assert.ok(!fs.existsSync(path.join(root, 'documents', 'done', 'summary.md')));
+      assert.ok(!fs.existsSync(path.join(root, 'tasks', 'done', 'summary.md')));
     } finally {
       cleanup(tmp);
     }
   });
 
-  test('removes non-permanent files in specification/', () => {
+  test('removes non-permanent files in tasks/specification/', () => {
     const tmp = makeTmpDir();
     try {
       const root = path.join(tmp, '.ai_context');
-      new TemplateGenerator('').scaffoldInit(root, 'strict', 'Old', 'Desc', []);
-      fs.writeFileSync(path.join(root, 'documents', 'specification', 'feature.md'), '# Spec');
-      fs.writeFileSync(path.join(root, 'documents', 'specification', 'permanent-overview.md'), '# Overview');
+      defaultInit(root);
+      fs.writeFileSync(path.join(root, 'tasks', 'specification', 'feature.md'), '# Spec');
+      fs.writeFileSync(path.join(root, 'tasks', 'specification', 'permanent-overview.md'), '# Overview');
 
-      new TemplateGenerator('').scaffoldNewContext(root, 'New', 'Desc', []);
+      new TemplateGenerator('').scaffoldNewTask(root, '', 'New task', 'Desc', []);
 
-      assert.ok(!fs.existsSync(path.join(root, 'documents', 'specification', 'feature.md')));
-      assert.ok(fs.existsSync(path.join(root, 'documents', 'specification', 'permanent-overview.md')));
+      assert.ok(!fs.existsSync(path.join(root, 'tasks', 'specification', 'feature.md')));
+      assert.ok(fs.existsSync(path.join(root, 'tasks', 'specification', 'permanent-overview.md')));
     } finally {
       cleanup(tmp);
     }
   });
 
-  test('removes non-permanent files in technical/', () => {
+  test('removes non-permanent files in tasks/technical/', () => {
     const tmp = makeTmpDir();
     try {
       const root = path.join(tmp, '.ai_context');
-      new TemplateGenerator('').scaffoldInit(root, 'strict', 'Old', 'Desc', []);
-      fs.writeFileSync(path.join(root, 'documents', 'technical', 'adr.md'), '# ADR');
-      fs.writeFileSync(path.join(root, 'documents', 'technical', 'permanent-conventions.md'), '# Conv');
+      defaultInit(root);
+      fs.writeFileSync(path.join(root, 'tasks', 'technical', 'adr.md'), '# ADR');
+      fs.writeFileSync(path.join(root, 'tasks', 'technical', 'permanent-conventions.md'), '# Conv');
 
-      new TemplateGenerator('').scaffoldNewContext(root, 'New', 'Desc', []);
+      new TemplateGenerator('').scaffoldNewTask(root, '', 'New task', 'Desc', []);
 
-      assert.ok(!fs.existsSync(path.join(root, 'documents', 'technical', 'adr.md')));
-      assert.ok(fs.existsSync(path.join(root, 'documents', 'technical', 'permanent-conventions.md')));
+      assert.ok(!fs.existsSync(path.join(root, 'tasks', 'technical', 'adr.md')));
+      assert.ok(fs.existsSync(path.join(root, 'tasks', 'technical', 'permanent-conventions.md')));
     } finally {
       cleanup(tmp);
     }
   });
 
-  test('appends entry to history.log with endedAt', () => {
+  test('appends entry to history.json with endedAt', () => {
     const tmp = makeTmpDir();
     try {
       const root = path.join(tmp, '.ai_context');
-      new TemplateGenerator('').scaffoldInit(root, 'strict', 'Old context', 'Desc', []);
-      new TemplateGenerator('').scaffoldNewContext(root, 'New context', 'Desc', []);
+      defaultInit(root, 'Old context');
+      new TemplateGenerator('').scaffoldNewTask(root, '', 'New context', 'Desc', []);
 
-      const log = fs.readFileSync(path.join(root, 'history.log'), 'utf8');
+      const log = fs.readFileSync(path.join(root, 'history.json'), 'utf8');
       assert.ok(log.includes('Old context'));
       assert.ok(log.includes('endedAt'));
     } finally {
@@ -310,19 +365,49 @@ suite('TemplateGenerator — scaffoldNewContext', () => {
     }
   });
 
-  test('writes new CONTEXT.md and context.json', () => {
+  test('records completed step in history.json', () => {
     const tmp = makeTmpDir();
     try {
       const root = path.join(tmp, '.ai_context');
-      new TemplateGenerator('').scaffoldInit(root, 'strict', 'Old', 'Desc', []);
-      new TemplateGenerator('').scaffoldNewContext(root, 'Fresh start', 'New desc', ['Task A']);
+      defaultInit(root, 'Old task');
+      new TemplateGenerator('').scaffoldNewTask(root, 'phase-1-core', 'New task', 'Desc', []);
 
-      const content = fs.readFileSync(path.join(root, 'CONTEXT.md'), 'utf8');
-      assert.ok(content.includes('Fresh start'));
-      assert.ok(content.includes('- [ ] Task A'));
+      const log = fs.readFileSync(path.join(root, 'history.json'), 'utf8');
+      assert.ok(log.includes('phase-1-core'), 'Completed step must appear in history');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  test('writes new context.json', () => {
+    const tmp = makeTmpDir();
+    try {
+      const root = path.join(tmp, '.ai_context');
+      defaultInit(root);
+      new TemplateGenerator('').scaffoldNewTask(root, '', 'Fresh start', 'New desc', []);
 
       const json = JSON.parse(fs.readFileSync(path.join(root, 'context.json'), 'utf8'));
       assert.strictEqual(json.title, 'Fresh start');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  test('preserves vision.md and steps/ on new task', () => {
+    const tmp = makeTmpDir();
+    try {
+      const root = path.join(tmp, '.ai_context');
+      new TemplateGenerator('').scaffoldInit(
+        root, 'strict', 'Context', 'My big vision', 'First task', 'Desc', [],
+        [{ name: 'Phase 1', description: 'Core' }]
+      );
+
+      new TemplateGenerator('').scaffoldNewTask(root, '', 'Next task', 'Desc', []);
+
+      assert.ok(fs.readFileSync(path.join(root, 'vision.md'), 'utf8').includes('My big vision'),
+        'vision.md must be preserved');
+      assert.ok(fs.existsSync(path.join(root, 'steps', 'phase-1.md')),
+        'steps/ must be preserved');
     } finally {
       cleanup(tmp);
     }
@@ -456,9 +541,9 @@ suite('Agent Compliance — invariants across all profiles', () => {
       const c = scaffoldAndGetContract(profile);
       assert.ok(c.toLowerCase().includes('communication'));
     });
-    test(`[${profile}] always instructs agent to reply in French`, () => {
+    test(`[${profile}] always instructs agent to reply in English or French`, () => {
       const c = scaffoldAndGetContract(profile);
-      assert.ok(c.includes('français') || c.includes('French'));
+      assert.ok(c.includes('français') || c.includes('French') || c.includes('English'));
     });
   }
 });

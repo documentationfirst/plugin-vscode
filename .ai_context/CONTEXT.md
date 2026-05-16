@@ -1,29 +1,53 @@
-# Contexte — Ajout du dossier `skills/` et alignement plugins
+# Contexte — Migration de la structure `.ai_context` vers v2
 
-*Démarré : 2026-04-30*
+*Démarré : 2026-05-15*
 
 ---
 
 ## Description
 
-Vérification et finalisation du support du dossier `skills/` dans le plugin VSCode,
-en cohérence avec le plugin IntelliJ (où un bug a été corrigé : `documents/skills/` → `skills/`).
-Le plugin VSCode avait déjà la bonne position pour `skills/` dans `TemplateGenerator.ts`
-et `DddTreeProvider.ts`. Aucun code n'était à modifier — la tâche consistait à documenter
-l'état réel de l'implémentation et à mettre en ordre le `.ai_context/` du projet.
+Refonte de la structure `.ai_context/` pour les deux plugins (VSCode et IntelliJ)
+afin d'aligner sur la nouvelle arborescence de référence définie dans `skills/methodology-ddd-ai.md` :
+- `documents/` → `tasks/`
+- `history.log` → `history.json`
+- Ajout de `vision.md` (permanent, créé à l'init)
+- Ajout de `steps/` (jalons/features, permanent)
+- Enrichissement du flow `init` : vision → context → steps → tasks
 
 ---
 
 ## Todo
 
-- [x] Vérifier `scaffoldInit` dans `TemplateGenerator.ts` : `skills/` à la racine ✅
-- [x] Vérifier `scaffoldNewContext` : `skills/` nettoyé sauf `permanent-*` ✅
-- [x] Vérifier `DddTreeProvider.ts` : `skills/` affiché côte à côte avec `documents/` ✅
-- [x] Vérifier `package.json` : `ddd.newDocument` s'applique à tout `dddFolder` ✅
-- [x] Rédiger `specs-functional.md` dans `documents/specification/`
-- [x] Rédiger le fichier `done/` résumant l'état de l'implémentation
-- [x] `DddTreeProvider` : `contextValue = 'dddSkillsFolder'` + icône `mortar-board`
-- [x] Créer `commands/newSkill.ts` avec template dédié
-- [x] Enregistrer `ddd.newSkill` dans `extension.ts`
-- [x] Déclarer `ddd.newSkill` dans `package.json` + menu inline `dddSkillsFolder`
-- [x] Rédiger `done/skills-implementation.md`
+- [x] Mettre à jour `TemplateGenerator.ts` (VSCode) : `tasks/`, `steps/`, `vision.md`, nouveaux params
+- [x] Mettre à jour `initContext.ts` : flow vision + steps + todos
+- [x] Mettre à jour `newContext.ts` : message d'avertissement
+- [x] Mettre à jour `DddTreeProvider.ts` : afficher `tasks/`, `steps/`, `skills/`
+- [x] Mettre à jour `TemplateProvider.kt` (IntelliJ) : mêmes changements
+- [x] Mettre à jour `DddActions.kt` (IntelliJ) : flow init avec vision + steps
+- [x] Mettre à jour `DddToolWindowFactory.kt` (IntelliJ) : arborescence + icônes
+- [x] Mettre à jour `README.md` des deux `.ai_context/`
+- [x] Créer `vision.md` dans les deux `.ai_context/`
+- [ ] Créer `steps/` et `tasks/` dans les deux `.ai_context/` (commandes terminal ci-dessous)
+- [ ] Migrer le contenu de `documents/` vers `tasks/` dans les deux `.ai_context/`
+- [ ] Supprimer les anciens dossiers `documents/` après migration
+
+## Commandes à exécuter (WSL)
+
+```bash
+# Plugin VSCode
+cd ~/CLAUDE/documentationfirst/plugin-vscode/.ai_context
+mkdir -p steps tasks/done tasks/specification tasks/technical
+touch steps/.gitkeep tasks/done/.gitkeep tasks/specification/.gitkeep tasks/technical/.gitkeep
+# Migrer les fichiers
+cp documents/specification/*.md tasks/specification/
+cp documents/done/*.md tasks/done/ 2>/dev/null || true
+cp documents/technical/*.md tasks/technical/ 2>/dev/null || true
+
+# Plugin IntelliJ
+cd ~/CLAUDE/documentationfirst/plugin-intellij/.ai_context
+mkdir -p steps tasks/done tasks/specification tasks/technical
+touch steps/.gitkeep tasks/done/.gitkeep tasks/specification/.gitkeep tasks/technical/.gitkeep
+cp documents/specification/*.md tasks/specification/
+cp documents/done/*.md tasks/done/ 2>/dev/null || true
+cp documents/technical/*.md tasks/technical/ 2>/dev/null || true
+```

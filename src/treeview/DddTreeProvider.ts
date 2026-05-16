@@ -37,9 +37,18 @@ export class DddTreeItem extends vscode.TreeItem {
         this.iconPath = new vscode.ThemeIcon('markdown');
       }
     } else {
-      const isSkillsFolder = path.basename(fullPath) === 'skills';
-      this.iconPath = new vscode.ThemeIcon(isSkillsFolder ? 'mortar-board' : 'folder');
-      this.contextValue = isSkillsFolder ? 'dddSkillsFolder' : 'dddFolder';
+      const name = path.basename(fullPath);
+      const isSkillsFolder = name === 'skills';
+      const isStepsFolder  = name === 'steps';
+      const isTasksFolder  = name === 'tasks';
+      this.iconPath = new vscode.ThemeIcon(
+        isSkillsFolder ? 'mortar-board' :
+        isStepsFolder  ? 'list-ordered' :
+        isTasksFolder  ? 'sync'         : 'folder'
+      );
+      this.contextValue = isSkillsFolder ? 'dddSkillsFolder'
+                        : isTasksFolder  ? 'dddTasksFolder'
+                        : 'dddFolder';
     }
   }
 }
@@ -70,24 +79,14 @@ export class DddTreeProvider implements vscode.TreeDataProvider<DddTreeItem> {
       ];
     }
 
-    // Root level: show documents/ and skills/
+    // Root level: show tasks/, steps/, and skills/
     if (!element) {
       const items: DddTreeItem[] = [];
-      const documentsPath = path.join(aiContextRoot, 'documents');
-      if (fs.existsSync(documentsPath)) {
-        items.push(new DddTreeItem(
-          documentsPath,
-          true,
-          vscode.TreeItemCollapsibleState.Expanded
-        ));
-      }
-      const skillsPath = path.join(aiContextRoot, 'skills');
-      if (fs.existsSync(skillsPath)) {
-        items.push(new DddTreeItem(
-          skillsPath,
-          true,
-          vscode.TreeItemCollapsibleState.Expanded
-        ));
+      for (const dirName of ['tasks', 'steps', 'skills']) {
+        const dirPath = path.join(aiContextRoot, dirName);
+        if (fs.existsSync(dirPath)) {
+          items.push(new DddTreeItem(dirPath, true, vscode.TreeItemCollapsibleState.Expanded));
+        }
       }
       return items;
     }

@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Stack } from '../detector/DddDetector';
 import { writeFile, appendFile, ensureDir, today, nowIso } from '../utils/fileUtils';
 
 export type AgentProfile = 'strict' | 'standard' | 'permissive';
@@ -16,33 +15,59 @@ It structures collaboration between the developer and the AI agent throughout th
 
 ## Philosophy
 
-The method is based on a simple principle: **documentation is not a deliverable, it is a working tool**.
+**Documentation is not a deliverable — it is the architecture.**
 
-The developer and the AI agent collaborate by **reading and writing documents**.
-- The developer writes what they want to do, understand or decide.
-- The agent reads, completes, refines, questions, and documents what it has done.
-
+The developer and the AI agent collaborate by reading and writing documents.
 > It is not the agent who decides — it is the developer who drives through documents.
 
 ---
 
+## Reading order (before any action)
+
+### 🔒 Fixed reference — read once, always valid
+1. \`CONTEXT.md\` — who we are, what we build, the stack, team conventions *(permanent, never task-specific)*
+2. \`CONTRACT.md\` — agent interaction rules *(permanent)*
+
+### 🔄 Current development work — read every session
+3. \`vision.md\` — the product direction and epic goals *(reset on "New Vision")*
+4. \`steps/\` — roadmap phases for the current vision *(reset on "New Vision")*
+5. \`dev-context.json\` — active task: title, description, todos, and step progress
+6. \`tasks/specification/\` — functional specs for the current task
+7. \`tasks/done/\` — what was already implemented in this task
+8. \`tasks/technical/\` — technical decisions
+
+### 🧠 Permanent behaviours
+9. \`skills/\` — reusable agent skills (never reset)
+
+---
+
+## Lifecycle layers
+
+| Layer | Files | Reset? |
+|---|---|---|
+| **Permanent** | \`CONTEXT.md\`, \`CONTRACT.md\`, \`README.md\`, \`skills/\` | Never |
+| **Semi-permanent** | \`vision.md\` | On "New Vision" |
+| **Contextual (per vision)** | \`steps/\` | On "New Vision" |
+| **Ephemeral (per task)** | \`dev-context.json\`, \`tasks/\` non-permanent files | On "New Task" |
+
 ## \`permanent-\` Convention
 
-A file in \`technical/\` or \`specification/\` prefixed with \`permanent-\`
-**will not be deleted** when switching to a new context.
+A file prefixed with \`permanent-\` **will not be deleted** when switching tasks or visions.
 
 ## Structure
 
 \`\`\`
 .ai_context/
 ├── README.md              ← this file (permanent)
-├── CONTRACT.md            ← rules for the agent (permanent)
-├── CONTEXT.md             ← objective and todo list (contextual)
-├── context.json           ← machine metadata (contextual)
-├── history.log            ← past contexts journal (permanent)
-├── skills/                ← skills and competencies (permanent-* kept)
-└── documents/
-    ├── done/              ← agent summaries (contextual)
+├── CONTEXT.md             ← WHO/WHAT: project identity, stack, conventions (permanent)
+├── CONTRACT.md            ← HOW: agent interaction rules (permanent)
+├── vision.md              ← WHERE WE'RE GOING: product vision and epic (semi-permanent)
+├── dev-context.json       ← WHAT WE'RE DOING NOW: vision + steps + active task
+├── history.json           ← log of all tasks and visions (append-only)
+├── skills/                ← reusable agent behaviours (permanent)
+├── steps/                 ← roadmap phases for current vision (reset on new vision)
+└── tasks/
+    ├── done/              ← agent execution reports (reset on new task)
     ├── specification/     ← functional specs (permanent-* kept)
     └── technical/         ← technical decisions (permanent-* kept)
 \`\`\`
@@ -147,19 +172,165 @@ All context is centralized in [\`.ai_context/\`](./.ai_context/).
 `;
 }
 
-// ─── Contextual templates ─────────────────────────────────────────────────────
+// ─── Permanent templates ──────────────────────────────────────────────────────
 
-function contextMd(title: string, description: string, todos: string[]): string {
+function visionMd(vision: string): string {
+  return `# Vision
+
+*Created: ${today()}*
+
+---
+
+## Epic
+
+${vision}
+
+---
+
+## Goals
+
+- [ ] ...
+
+## Out of scope
+
+- ...
+`;
+}
+
+function stepMd(name: string, description: string): string {
+  return `# Step — ${name}
+
+*Created: ${today()}*
+
+---
+
+## Objective
+
+${description || '*(describe this step)*'}
+
+---
+
+## Tasks
+
+- [ ] ...
+`;
+}
+
+function contextProjectMd(projectContext: string): string {
+  return `# Project Context
+
+*Created: ${today()}*
+
+> **This file is permanent.** It describes WHO we are and WHAT we build.
+> It never changes per task or vision — it is the fixed reference the agent reads at the start of every session.
+> For the current development work (vision, steps, active task), see \`dev-context.json\`.
+
+---
+
+## What we are building
+
+${projectContext}
+
+---
+
+## Stack & conventions
+
+*(describe the stack, language, framework, key rules)*
+
+---
+
+## Team rules
+
+*(describe how the agent should work: language, code style, what it must never do)*
+`;
+}
+
+// ─── Ephemeral templates ──────────────────────────────────────────────────────
+
+function methodologySkillMd(): string {
+  return `# Skill — DDD Methodology (permanent)
+
+*Created: ${today()}*
+
+> This file is permanent — it survives every context and vision switch.
+> It defines how the agent must work on this project at all times.
+
+---
+
+## Reading order (before any action)
+
+### 🔒 Fixed reference — read once, always valid
+1. \`CONTEXT.md\` — who we are, what we build, the stack, team conventions *(permanent)*
+2. \`CONTRACT.md\` — agent interaction rules *(permanent)*
+
+### 🔄 Current development work — read every session
+3. \`vision.md\` — product direction and epic goals
+4. \`steps/\` — roadmap phases for the current vision
+5. \`dev-context.json\` — active task: title, description, todos, step progress
+6. \`tasks/specification/\` — functional specs for the current task
+7. \`tasks/done/\` — what was already implemented
+8. \`tasks/technical/\` — technical decisions
+
+---
+
+## Session protocol
+
+### 1. Read before acting
+Read all context files above in order before taking any action.
+> These files are the project's memory. Never assume the state of the code without reading them.
+
+### 2. Spec before code
+For any new feature, fix, or refactoring:
+1. Create \`tasks/specification/spec-<feature>.md\` with: context, expected behaviour, components, plan
+2. Optionally generate \`tasks/specification/spec-<feature>-preview.html\` for UI tasks
+3. Wait for explicit developer validation before writing any production code
+
+### 3. Implement
+- Follow the validated spec to the letter
+- Group changes by file
+- Validate errors after each file modified
+
+### 4. Write the done report
+After implementation, create \`tasks/done/done-<feature>.md\`:
+- Summary of changes
+- Per item: problem → root cause (if bug) → solution → modified files
+- Optionally generate \`tasks/done/done-<feature>-test.html\` for acceptance verification
+
+---
+
+## Artefact conventions
+
+| File | Location | Written by | Purpose |
+|---|---|---|---|
+| \`spec-*.md\` | \`tasks/specification/\` | Human | Intent |
+| \`spec-*-preview.html\` | \`tasks/specification/\` | AI | Visual validation before coding |
+| \`done-*.md\` | \`tasks/done/\` | AI | Execution report |
+| \`done-*-test.html\` | \`tasks/done/\` | AI | Acceptance test runner |
+
+Prefix any file with \`permanent-\` to preserve it across context resets.
+
+---
+
+## Communication rules
+
+- If the request is ambiguous: ask ONE focused question, wait for the answer
+- If the developer explains something: update mental context only — do not act unless explicitly asked
+- If a bug is found in passing: signal it, do not fix without agreement (unless it blocks the current task)
+- A developer explanation is not an action order
+`;
+}
+
+function taskMd(title: string, description: string, todos: string[]): string {
   const todoLines = todos.length > 0
     ? todos.map(t => `- [ ] ${t}`).join('\n')
     : '- [ ] ...';
-  return `# Context — ${title}
+  return `# Task — ${title}
 
 *Started: ${today()}*
 
 ---
 
-## Description
+## Objective
 
 ${description}
 
@@ -171,50 +342,114 @@ ${todoLines}
 `;
 }
 
-function contextJson(title: string, description: string): string {
-  const escaped = (s: string) => s.replace(/"/g, '\\"');
-  return `{"title":"${escaped(title)}","description":"${escaped(description)}","startedAt":"${nowIso()}"}`;
+function contextJson(
+  title: string,
+  description: string,
+  vision?: string,
+  steps?: Array<{ name: string; description: string; done?: boolean }>,
+  todos?: string[]
+): string {
+  return JSON.stringify({
+    vision: vision ?? '',
+    steps: (steps ?? []).map(s => ({ name: s.name, description: s.description, done: s.done ?? false })),
+    task: {
+      title,
+      description,
+      startedAt: nowIso(),
+      todos: (todos ?? []).map(t => ({ text: t, done: false })),
+    }
+  }, null, 2);
+}
+
+function historyLine(type: 'vision' | 'task', title: string, completedStep?: string, vision?: string): string {
+  return JSON.stringify({
+    type,
+    ...(vision ? { vision } : {}),
+    title,
+    ...(completedStep ? { completedStep } : {}),
+    endedAt: nowIso(),
+  });
 }
 
 // ─── TemplateGenerator ────────────────────────────────────────────────────────
 
 export class TemplateGenerator {
-  constructor(private readonly extensionPath: string) {}
+  // eslint-disable-next-line @typescript-eslint/no-useless-constructor
+  constructor(_extensionPath: string) {}
 
   scaffoldInit(
     aiContextRoot: string,
     profile: AgentProfile,
+    projectContext: string,
+    vision: string,
     title: string,
     description: string,
-    todos: string[]
+    todos: string[],
+    steps: Array<{ name: string; description: string }>
   ): void {
     ensureDir(aiContextRoot);
+
+    // tasks/ subdirs
     for (const sub of ['done', 'specification', 'technical']) {
-      ensureDir(path.join(aiContextRoot, 'documents', sub));
-      const gitkeep = path.join(aiContextRoot, 'documents', sub, '.gitkeep');
+      ensureDir(path.join(aiContextRoot, 'tasks', sub));
+      const gitkeep = path.join(aiContextRoot, 'tasks', sub, '.gitkeep');
       if (!fs.existsSync(gitkeep)) { writeFile(gitkeep, ''); }
     }
-    ensureDir(path.join(aiContextRoot, 'skills'));
-    const skillsGitkeep = path.join(aiContextRoot, 'skills', '.gitkeep');
-    if (!fs.existsSync(skillsGitkeep)) { writeFile(skillsGitkeep, ''); }
 
+    // skills/
+    ensureDir(path.join(aiContextRoot, 'skills'));
+    if (!fs.existsSync(path.join(aiContextRoot, 'skills', '.gitkeep'))) {
+      writeFile(path.join(aiContextRoot, 'skills', '.gitkeep'), '');
+    }
+    // Default methodology skill (if not already present)
+    const methodologyPath = path.join(aiContextRoot, 'skills', 'permanent-methodology.md');
+    if (!fs.existsSync(methodologyPath)) {
+      writeFile(methodologyPath, methodologySkillMd());
+    }
+
+    // steps/
+    ensureDir(path.join(aiContextRoot, 'steps'));
+    if (!fs.existsSync(path.join(aiContextRoot, 'steps', '.gitkeep'))) {
+      writeFile(path.join(aiContextRoot, 'steps', '.gitkeep'), '');
+    }
+    for (const step of steps) {
+      const slug = step.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      writeFile(path.join(aiContextRoot, 'steps', `${slug}.md`), stepMd(step.name, step.description));
+    }
+
+    // permanent files (only if not existing)
     const readmePath = path.join(aiContextRoot, 'README.md');
     if (!fs.existsSync(readmePath)) { writeFile(readmePath, AI_CONTEXT_README); }
 
     const contractPath = path.join(aiContextRoot, 'CONTRACT.md');
     if (!fs.existsSync(contractPath)) { writeFile(contractPath, contractMd(profile)); }
 
-    writeFile(path.join(aiContextRoot, 'CONTEXT.md'), contextMd(title, description, todos));
-    writeFile(path.join(aiContextRoot, 'context.json'), contextJson(title, description));
+    // CONTEXT.md is permanent — only write on first init
+    const contextMdPath = path.join(aiContextRoot, 'CONTEXT.md');
+    if (!fs.existsSync(contextMdPath)) {
+      writeFile(contextMdPath, contextProjectMd(projectContext));
+    }
+
+    // vision.md is semi-permanent — only write on first init
+    const visionPath = path.join(aiContextRoot, 'vision.md');
+    if (!fs.existsSync(visionPath)) { writeFile(visionPath, visionMd(vision)); }
+
+    // current task
+    writeFile(path.join(aiContextRoot, 'dev-context.json'), contextJson(title, description, vision, steps, todos));
+    // No separate task.md at root — task is tracked via dev-context.json + tasks/
 
     // Create or update project README.md
     const projectRoot = path.dirname(aiContextRoot);
     const projectReadme = path.join(projectRoot, 'README.md');
-    const agentHeader = `# For AI Agent :
+    const agentHeader = `# For AI Agent
 
-Read all [context](./.ai_context) for context and needs.
-The agent must apply the conditions specified in CONTRACT.md.
-The current development context is presented in CONTEXT.md and all files in the \`documents/\` directory.
+> Read \`.ai_context/\` before any action.
+
+- **WHO/WHAT**: \`CONTEXT.md\` — project identity, stack, conventions *(permanent reference, like a README)*
+- **HOW**: \`CONTRACT.md\` — interaction rules *(permanent)*
+- **WHERE WE'RE GOING**: \`vision.md\` + \`steps/\` — product direction and roadmap phases
+- **WHAT WE'RE DOING NOW**: \`dev-context.json\` — active task title, description, todos and step progress
+- **TASK DETAILS**: \`tasks/specification/\`, \`tasks/done/\`, \`tasks/technical/\`
 
 ---
 
@@ -230,33 +465,87 @@ The current development context is presented in CONTEXT.md and all files in the 
     }
   }
 
-  scaffoldNewContext(
+  scaffoldNewVision(
     aiContextRoot: string,
+    vision: string,
+    steps: Array<{ name: string; description: string }>,
     title: string,
     description: string,
     todos: string[]
   ): void {
-    // Archive to history.log
-    const contextJsonPath = path.join(aiContextRoot, 'context.json');
-    if (fs.existsSync(contextJsonPath)) {
-      const old = fs.readFileSync(contextJsonPath, 'utf8').trim().replace(/}$/, '');
+    // Archive current vision to history.json
+    const devContextPath = path.join(aiContextRoot, 'dev-context.json');
+    if (fs.existsSync(devContextPath)) {
+      const old = JSON.parse(fs.readFileSync(devContextPath, 'utf8'));
       appendFile(
-        path.join(aiContextRoot, 'history.log'),
-        `${old},"endedAt":"${nowIso()}"}\n`
+        path.join(aiContextRoot, 'history.json'),
+        historyLine('vision', old.task?.title || old.title || 'unnamed vision') + '\n'
       );
     }
 
-    // Clear done/ entirely
-    const doneDir = path.join(aiContextRoot, 'documents', 'done');
-    if (fs.existsSync(doneDir)) {
-      fs.readdirSync(doneDir).forEach((f: string) => {
-        if (f !== '.gitkeep') { fs.unlinkSync(path.join(doneDir, f)); }
+    // Reset steps/ (delete all)
+    const stepsDir = path.join(aiContextRoot, 'steps');
+    if (fs.existsSync(stepsDir)) {
+      fs.readdirSync(stepsDir).forEach((f: string) => {
+        if (f !== '.gitkeep') { fs.unlinkSync(path.join(stepsDir, f)); }
       });
+    } else {
+      ensureDir(stepsDir);
+      writeFile(path.join(stepsDir, '.gitkeep'), '');
+    }
+    for (const step of steps) {
+      const slug = step.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      writeFile(path.join(stepsDir, `${slug}.md`), stepMd(step.name, step.description));
     }
 
-    // Clear specification/, technical/, and skills/ except permanent-*
-    for (const sub of ['specification', 'technical', 'skills']) {
-      const subDir = sub === 'skills' ? path.join(aiContextRoot, sub) : path.join(aiContextRoot, 'documents', sub);
+    // Reset tasks/ non-permanent
+    this._clearTasks(aiContextRoot);
+
+    // Overwrite vision.md
+    writeFile(path.join(aiContextRoot, 'vision.md'), visionMd(vision));
+
+    // New task metadata
+    writeFile(path.join(aiContextRoot, 'dev-context.json'), contextJson(title, description, vision, steps, todos));
+  }
+
+  scaffoldNewTask(
+    aiContextRoot: string,
+    completedStep: string,
+    title: string,
+    description: string,
+    todos: string[]
+  ): void {
+    // Archive current task to history.json
+    const devContextPath = path.join(aiContextRoot, 'dev-context.json');
+    let currentVision = '';
+    let currentSteps: Array<{ name: string; description: string; done: boolean }> = [];
+    if (fs.existsSync(devContextPath)) {
+      const old = JSON.parse(fs.readFileSync(devContextPath, 'utf8'));
+      currentVision = old.vision ?? '';
+      // Mark the completed step as done
+      currentSteps = (old.steps ?? []).map((s: { name: string; description: string; done?: boolean }) => ({
+        ...s,
+        done: s.done === true || (
+          !!completedStep &&
+          s.name.toLowerCase().includes(completedStep.toLowerCase())
+        ),
+      }));
+      appendFile(
+        path.join(aiContextRoot, 'history.json'),
+        historyLine('task', old.task?.title || old.title || 'unnamed task', completedStep, old.vision || '') + '\n'
+      );
+    }
+
+    // Reset tasks/ non-permanent
+    this._clearTasks(aiContextRoot);
+
+    // New task metadata — preserve vision and steps (with updated done flags)
+    writeFile(devContextPath, contextJson(title, description, currentVision, currentSteps, todos));
+  }
+
+  private _clearTasks(aiContextRoot: string): void {
+    for (const sub of ['done', 'specification', 'technical']) {
+      const subDir = path.join(aiContextRoot, 'tasks', sub);
       if (fs.existsSync(subDir)) {
         fs.readdirSync(subDir).forEach((f: string) => {
           if (f !== '.gitkeep' && !f.startsWith('permanent-')) {
@@ -265,8 +554,5 @@ The current development context is presented in CONTEXT.md and all files in the 
         });
       }
     }
-
-    writeFile(path.join(aiContextRoot, 'CONTEXT.md'), contextMd(title, description, todos));
-    writeFile(path.join(aiContextRoot, 'context.json'), contextJson(title, description));
   }
 }

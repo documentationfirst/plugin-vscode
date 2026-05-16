@@ -4,7 +4,8 @@ import { DddDetector } from './detector/DddDetector';
 import { DddTreeItem, DddTreeProvider } from './treeview/DddTreeProvider';
 import { ContextPanel } from './webview/ContextPanel';
 import { initContext } from './commands/initContext';
-import { newContext } from './commands/newContext';
+import { newVision } from './commands/newVision';
+import { newTask } from './commands/newContext'; // newContext.ts repurposed as newTask
 import { newDocument } from './commands/newDocument';
 import { newSkill } from './commands/newSkill';
 import { aiContextPath } from './utils/fileUtils';
@@ -42,8 +43,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('ddd.initContext', () =>
       initContext(context, treeProvider, contextPanel).then(updateInitState)
     ),
-    vscode.commands.registerCommand('ddd.newContext', () =>
-      newContext(context, treeProvider, contextPanel).then(updateInitState)
+    vscode.commands.registerCommand('ddd.newVision', () =>
+      newVision(context, treeProvider, contextPanel).then(updateInitState)
+    ),
+    vscode.commands.registerCommand('ddd.newTask', () =>
+      newTask(context, treeProvider, contextPanel).then(updateInitState)
     ),
     vscode.commands.registerCommand('ddd.newDocument', (item: DddTreeItem) => {
       const targetDir = item?.fullPath;
