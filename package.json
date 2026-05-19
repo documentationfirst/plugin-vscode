@@ -1,9 +1,9 @@
 {
   "name": "ddd-documentation-first",
-  "displayName": "Documentation First",
-  "description": "Documentation-Driven Development — gérez votre contexte AI directement dans l'IDE.",
-  "version": "2.0.0",
-  "publisher": "documentationfirst",
+  "displayName": "Documentation First - DDD2",
+  "description": "Documentation-Driven Development v2 framework for agentic AI.",
+  "version": "1.0.0",
+  "publisher": "DocumentationFirst",
   "author": "Documentation First <contact@documentationfirst.ai>",
   "license": "MIT",
   "repository": {
