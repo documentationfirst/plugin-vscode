@@ -13,14 +13,28 @@
   "homepage": "https://documentationfirst.ai",
   "icon": "assets/ddd-ai.png",
   "files": [
-    "dist",
-    "assets/ddd-ai.png"
+    "dist/*",
+    "assets/ddd-ai.png",
+    "LICENSE.txt"
   ],
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.85.0"
   },
   "categories": ["Other", "Snippets"],
-  "keywords": ["documentation", "ai", "context", "markdown", "ddd"],
+  "keywords": [
+    "documentation",
+    "ai",
+    "ddd",
+    "documentation-driven",
+    "context",
+    "markdown",
+    "agent",
+    "specification",
+    "knowledge-base",
+    "best-practices",
+    "development",
+    "templates"
+  ],
   "activationEvents": [
     "workspaceContains:**/.ai_context/**",
     "onStartupFinished"
