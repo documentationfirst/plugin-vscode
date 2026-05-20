@@ -1,13 +1,6 @@
-<div align="center">
-    <img align="left" src="assets/ddd-ai.png" alt="Documentation-Driven Development" width="120" style="margin-top:10px;" />
-    <h1>Documentation First - DDD2</h1>
-
+# Make documentation your AI's superpower
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 [![Website](https://img.shields.io/badge/website-documentationfirst.ai-58a6ff?style=flat-square)](https://documentationfirst.ai)
-
-**Make documentation your AI's superpower**
-
-</div>
 
 ---
 
