@@ -13,13 +13,18 @@ function copyAssets() {
     fs.mkdirSync(distAssetsDir, { recursive: true });
   }
 
-  // Copy PNG icon
-  const srcFile = path.join('assets', 'ddd-ai.png');
-  const destFile = path.join(distAssetsDir, 'ddd-ai.png');
+  const filesToCopy = [
+    'icon.svg',              // activitybar icon (theme-aware)
+    'ddd-ai-marketplace.png' // marketplace icon (colored background)
+  ];
 
-  if (fs.existsSync(srcFile)) {
-    fs.copyFileSync(srcFile, destFile);
-    console.log('  ✓ ddd-ai.png');
+  for (const file of filesToCopy) {
+    const src = path.join('assets', file);
+    const dest = path.join(distAssetsDir, file);
+    if (fs.existsSync(src)) {
+      fs.copyFileSync(src, dest);
+      console.log(`  ✓ ${file}`);
+    }
   }
 
   console.log('Assets copied to dist/');

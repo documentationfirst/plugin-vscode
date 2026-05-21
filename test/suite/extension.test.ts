@@ -152,7 +152,7 @@ suite('TemplateGenerator — scaffoldInit', () => {
     }
   });
 
-  test('writes task title and description in context.json', () => {
+  test('writes task title and description in dev-context.json', () => {
     const tmp = makeTmpDir();
     try {
       const root = path.join(tmp, '.ai_context');
@@ -161,10 +161,27 @@ suite('TemplateGenerator — scaffoldInit', () => {
         'My project context', 'My vision', 'My Title', 'My Desc', [], []
       );
 
-      const json = JSON.parse(fs.readFileSync(path.join(root, 'context.json'), 'utf8'));
-      assert.strictEqual(json.title, 'My Title');
-      assert.strictEqual(json.description, 'My Desc');
-      assert.ok(json.startedAt);
+      const json = JSON.parse(fs.readFileSync(path.join(root, 'dev-context.json'), 'utf8'));
+      assert.strictEqual(json.task.title, 'My Title');
+      assert.strictEqual(json.task.description, 'My Desc');
+      assert.ok(json.task.startedAt);
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  test('creates spec file for first task in tasks/specification/', () => {
+    const tmp = makeTmpDir();
+    try {
+      const root = path.join(tmp, '.ai_context');
+      new TemplateGenerator('').scaffoldInit(
+        root, 'strict', 'Context', 'Vision', 'My First Task', 'Do the thing', [], []
+      );
+
+      assert.ok(fs.existsSync(path.join(root, 'tasks', 'specification', 'spec-my-first-task.md')));
+      const spec = fs.readFileSync(path.join(root, 'tasks', 'specification', 'spec-my-first-task.md'), 'utf8');
+      assert.ok(spec.includes('My First Task'));
+      assert.ok(spec.includes('Do the thing'));
     } finally {
       cleanup(tmp);
     }
@@ -379,15 +396,68 @@ suite('TemplateGenerator — scaffoldNewTask', () => {
     }
   });
 
-  test('writes new context.json', () => {
+  test('writes new dev-context.json', () => {
     const tmp = makeTmpDir();
     try {
       const root = path.join(tmp, '.ai_context');
       defaultInit(root);
       new TemplateGenerator('').scaffoldNewTask(root, '', 'Fresh start', 'New desc', []);
 
-      const json = JSON.parse(fs.readFileSync(path.join(root, 'context.json'), 'utf8'));
-      assert.strictEqual(json.title, 'Fresh start');
+      const json = JSON.parse(fs.readFileSync(path.join(root, 'dev-context.json'), 'utf8'));
+      assert.strictEqual(json.task.title, 'Fresh start');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  test('only deletes specsToDelete — keeps others in tasks/specification/', () => {
+    const tmp = makeTmpDir();
+    try {
+      const root = path.join(tmp, '.ai_context');
+      defaultInit(root);
+      fs.writeFileSync(path.join(root, 'tasks', 'specification', 'spec-a.md'), '# A');
+      fs.writeFileSync(path.join(root, 'tasks', 'specification', 'spec-b.md'), '# B');
+
+      new TemplateGenerator('').scaffoldNewTask(root, '', 'New task', 'Desc', [], ['spec-a.md']);
+
+      assert.ok(!fs.existsSync(path.join(root, 'tasks', 'specification', 'spec-a.md')), 'spec-a.md should be deleted');
+      assert.ok(fs.existsSync(path.join(root, 'tasks', 'specification', 'spec-b.md')), 'spec-b.md should be kept');
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  test('creates spec file for new task in tasks/specification/', () => {
+    const tmp = makeTmpDir();
+    try {
+      const root = path.join(tmp, '.ai_context');
+      defaultInit(root);
+      new TemplateGenerator('').scaffoldNewTask(root, '', 'Implement Login', 'Auth flow', []);
+
+      assert.ok(fs.existsSync(path.join(root, 'tasks', 'specification', 'spec-implement-login.md')));
+      const spec = fs.readFileSync(path.join(root, 'tasks', 'specification', 'spec-implement-login.md'), 'utf8');
+      assert.ok(spec.includes('Implement Login'));
+      assert.ok(spec.includes('Auth flow'));
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  test('appends retrospective section to completed step file', () => {
+    const tmp = makeTmpDir();
+    try {
+      const root = path.join(tmp, '.ai_context');
+      new TemplateGenerator('').scaffoldInit(
+        root, 'strict', 'Context', 'Vision', 'First task', 'Desc', [],
+        [{ name: 'Phase 1 Core', description: 'Core work' }]
+      );
+
+      new TemplateGenerator('').scaffoldNewTask(root, 'Phase 1 Core', 'Next task', 'Desc', []);
+
+      const stepContent = fs.readFileSync(path.join(root, 'steps', 'phase-1-core.md'), 'utf8');
+      assert.ok(stepContent.includes('Retrospective'), 'Step file should contain retrospective');
+      assert.ok(stepContent.includes('What worked'));
+      assert.ok(stepContent.includes('What blocked'));
     } finally {
       cleanup(tmp);
     }

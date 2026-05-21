@@ -64,22 +64,27 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }),
   );
 
-  // ── Startup detection ──────────────────────────────────────────────────────
-  const detector = new DddDetector();
-  const { hasDddFolder, stack } = await detector.check();
+  // ── Startup detection (detached — must not block activate()) ──────────────
+  (async () => {
+    // Small delay to ensure workspace folders are fully resolved
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const detector = new DddDetector();
+    const { hasDddFolder, stack } = await detector.check();
 
-  if (hasDddFolder) {
-    vscode.window.setStatusBarMessage(`Documentation First ✅ — ${stack}`, 5000);
-  } else {
-    const choice = await vscode.window.showInformationMessage(
-      'Documentation First: no .ai_context/ folder found in this project. Initialize now?',
-      'Initialize',
-      'Later'
-    );
-    if (choice === 'Initialize') {
-      vscode.commands.executeCommand('ddd.initContext');
+    if (hasDddFolder) {
+      vscode.window.setStatusBarMessage(`Documentation First ✅ — ${stack}`, 5000);
+    } else {
+      const choice = await vscode.window.showInformationMessage(
+        'Documentation First: no .ai_context/ folder found in this project. Initialize now?',
+        { modal: false },
+        'Initialize',
+        'Later'
+      );
+      if (choice === 'Initialize') {
+        vscode.commands.executeCommand('ddd.initContext');
+      }
     }
-  }
+  })();
 }
 
 export function deactivate(): void {}

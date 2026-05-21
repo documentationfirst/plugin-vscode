@@ -28,6 +28,11 @@
       { "text": "Show steps with done/pending state in ContextPanel", "done": true },
       { "text": "Recompile and test New Task end-to-end", "done": false }
     ]
+  },
+  "lastSession": {
+    "date": "2026-05-21",
+    "done": "Full UX polish pass: Quick init, spec auto-creation, steps retrospective, selective spec deletion, CONTRACT session protocol, marketplace icon, tests and CHANGELOG — v1.0.2 ready to publish",
+    "remaining": "Publish 1.0.2 to VSCode Marketplace",
+    "blocker": ""
   }
 }
-

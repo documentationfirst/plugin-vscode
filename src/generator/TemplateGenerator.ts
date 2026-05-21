@@ -165,6 +165,28 @@ ${CONTRACT_PERMISSIONS[profile]}
 
 ---
 
+## 🔄 Session close protocol
+
+At the end of a session, update \`dev-context.json\` → \`lastSession\` with:
+\`\`\`json
+"lastSession": {
+  "date": "YYYY-MM-DD",
+  "done": "one sentence — what was implemented",
+  "remaining": "what is left in the current task",
+  "blocker": "what blocked or is unclear (empty if none)"
+}
+\`\`\`
+
+**Trigger this automatically when:**
+1. The developer signals end of session ("stop", "commit", "done", "à demain", etc.)
+2. More than 5 files were modified in this session
+3. A significant feature or bug fix was just completed
+4. A new major topic is about to begin — natural breakpoint before context switch
+
+This is a lightweight handoff — not a full \`done.md\`. One sentence per field.
+
+---
+
 ## 📁 Reference documentation
 
 All context is centralized in [\`.ai_context/\`](./.ai_context/).
@@ -436,7 +458,10 @@ export class TemplateGenerator {
 
     // current task
     writeFile(path.join(aiContextRoot, 'dev-context.json'), contextJson(title, description, vision, steps, todos));
-    // No separate task.md at root — task is tracked via dev-context.json + tasks/
+
+    // Create spec file for the first task
+    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    writeFile(path.join(aiContextRoot, 'tasks', 'specification', `spec-${slug}.md`), newTaskSpecMd(title, description));
 
     // Create or update project README.md
     const projectRoot = path.dirname(aiContextRoot);
@@ -506,6 +531,10 @@ export class TemplateGenerator {
 
     // New task metadata
     writeFile(path.join(aiContextRoot, 'dev-context.json'), contextJson(title, description, vision, steps, todos));
+
+    // Create spec file for the first task of the new vision
+    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    writeFile(path.join(aiContextRoot, 'tasks', 'specification', `spec-${slug}.md`), newTaskSpecMd(title, description));
   }
 
   scaffoldNewTask(
@@ -513,7 +542,8 @@ export class TemplateGenerator {
     completedStep: string,
     title: string,
     description: string,
-    todos: string[]
+    todos: string[],
+    specsToDelete: string[] = []
   ): void {
     // Archive current task to history.json
     const devContextPath = path.join(aiContextRoot, 'dev-context.json');
@@ -536,23 +566,87 @@ export class TemplateGenerator {
       );
     }
 
-    // Reset tasks/ non-permanent
-    this._clearTasks(aiContextRoot);
+    // Reset tasks/ non-permanent (with selective spec deletion)
+    this._clearTasks(aiContextRoot, specsToDelete);
+
+    // Append retrospective section to the completed step file
+    if (completedStep) {
+      const slug = completedStep.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      const stepFile = path.join(aiContextRoot, 'steps', `${slug}.md`);
+      if (fs.existsSync(stepFile)) {
+        const retro = `\n\n## Retrospective — ${today()}\n\n- ✅ What worked:\n- ⚠️ What blocked:\n- 📌 To remember:\n`;
+        fs.appendFileSync(stepFile, retro, 'utf8');
+      }
+    }
+
+    // Create spec file for the new task
+    const slug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const specContent = newTaskSpecMd(title, description);
+    writeFile(path.join(aiContextRoot, 'tasks', 'specification', `spec-${slug}.md`), specContent);
 
     // New task metadata — preserve vision and steps (with updated done flags)
     writeFile(devContextPath, contextJson(title, description, currentVision, currentSteps, todos));
   }
 
-  private _clearTasks(aiContextRoot: string): void {
-    for (const sub of ['done', 'specification', 'technical']) {
-      const subDir = path.join(aiContextRoot, 'tasks', sub);
-      if (fs.existsSync(subDir)) {
-        fs.readdirSync(subDir).forEach((f: string) => {
-          if (f !== '.gitkeep' && !f.startsWith('permanent-')) {
-            fs.unlinkSync(path.join(subDir, f));
-          }
-        });
-      }
+  private _clearTasks(aiContextRoot: string, specsToDelete: string[] = []): void {
+    // done/ — always cleared entirely
+    const doneDir = path.join(aiContextRoot, 'tasks', 'done');
+    if (fs.existsSync(doneDir)) {
+      fs.readdirSync(doneDir).forEach((f: string) => {
+        if (f !== '.gitkeep' && !f.startsWith('permanent-')) {
+          fs.unlinkSync(path.join(doneDir, f));
+        }
+      });
+    }
+
+    // specification/ — only delete files explicitly selected by user
+    const specDir = path.join(aiContextRoot, 'tasks', 'specification');
+    if (fs.existsSync(specDir)) {
+      fs.readdirSync(specDir).forEach((f: string) => {
+        if (f !== '.gitkeep' && !f.startsWith('permanent-') && specsToDelete.includes(f)) {
+          fs.unlinkSync(path.join(specDir, f));
+        }
+      });
+    }
+
+    // technical/ — clear non-permanent
+    const technicalDir = path.join(aiContextRoot, 'tasks', 'technical');
+    if (fs.existsSync(technicalDir)) {
+      fs.readdirSync(technicalDir).forEach((f: string) => {
+        if (f !== '.gitkeep' && !f.startsWith('permanent-')) {
+          fs.unlinkSync(path.join(technicalDir, f));
+        }
+      });
     }
   }
 }
+
+function newTaskSpecMd(title: string, description: string): string {
+  return `# Spec — ${title}
+
+*Created: ${today()}*
+
+---
+
+## Objective
+
+${description || '*(describe the objective of this task)*'}
+
+---
+
+## Expected behaviour
+
+*(describe the expected behaviour)*
+
+---
+
+## Plan
+
+*(describe the implementation plan)*
+
+---
+
+> 💡 **Next step**: ask your AI agent to read \`.ai_context/\` and implement this spec.
+`;
+}
+

@@ -1,8 +1,8 @@
 {
   "name": "ddd-documentation-first",
   "displayName": "Documentation First - DDD2",
-  "description": "Documentation-Driven Development v2 framework for agentic AI.",
-  "version": "1.0.1",
+  "description": "Make your documentation a superpower contextual memory for your AI agent. Documentation-Driven Development v2 for agentic AI.",
+  "version": "1.0.2",
   "publisher": "DocumentationFirst",
   "author": "Documentation First <contact@documentationfirst.ai>",
   "license": "MIT",
@@ -11,16 +11,24 @@
     "url": "https://github.com/documentationfirst/plugin-vscode"
   },
   "homepage": "https://documentationfirst.ai",
-  "icon": "assets/ddd-ai.png",
+  "icon": "assets/ddd-ai-marketplace.png",
+  "galleryBanner": {
+    "color": "#2d2d2d",
+    "theme": "dark"
+  },
   "files": [
     "dist/*",
-    "assets/ddd-ai.png",
+    "assets/icon.svg",
+    "assets/ddd-ai-marketplace.png",
     "LICENSE.txt"
   ],
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.75.0"
   },
-  "categories": ["Other", "Snippets"],
+  "categories": [
+    "Other",
+    "Snippets"
+  ],
   "keywords": [
     "documentation",
     "ai",
@@ -78,7 +86,7 @@
         {
           "id": "ddd-sidebar",
           "title": "Documentation First",
-          "icon": "assets/ddd-ai.png"
+          "icon": "assets/icon.svg"
         }
       ]
     },
