@@ -65,6 +65,7 @@ For full documentation, see [HOWTO.md](./HOWTO.md)
 - 🌐 [documentationfirst.ai](https://documentationfirst.ai)
 - 📖 [DDD Manifesto](https://github.com/documentationfirst/manifesto)
 - 🔌 [IntelliJ Plugin](https://github.com/documentationfirst/plugin-intellij)
+- 🔵 [VSCode Plugin](https://github.com/documentationfirst/plugin-vscode)
 
 ---
 
