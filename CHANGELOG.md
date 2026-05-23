@@ -1,5 +1,10 @@
 # Changelog — Documentation First (VSCode)
 
+## [1.0.3] — 2026-05-21
+
+### Fixes
+- Regression on 'new vision' command, now deletes all non-permanent spec files instead of none
+
 ## [1.0.2] — 2026-05-21
 
 ### New features

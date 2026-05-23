@@ -69,7 +69,7 @@ export async function newTask(
       }));
       const pickedSpecs = await vscode.window.showQuickPick(specItems, {
         title: 'New Task (2/4) — Which specification files should be deleted?',
-        placeHolder: 'Uncheck the ones you want to KEEP. All checked = all deleted.',
+        placeHolder: 'Check the ones you want to KEEP. Zero checked = all non permanent deleted.',
         canPickMany: true,
       });
       if (pickedSpecs === undefined) { return; }

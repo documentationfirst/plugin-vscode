@@ -603,7 +603,7 @@ export class TemplateGenerator {
     const specDir = path.join(aiContextRoot, 'tasks', 'specification');
     if (fs.existsSync(specDir)) {
       fs.readdirSync(specDir).forEach((f: string) => {
-        if (f !== '.gitkeep' && !f.startsWith('permanent-') && specsToDelete.includes(f)) {
+        if (f !== '.gitkeep' && !f.startsWith('permanent-') && !specsToDelete.includes(f)) {
           fs.unlinkSync(path.join(specDir, f));
         }
       });
