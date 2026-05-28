@@ -1,5 +1,5 @@
 # Make documentation your AI's superpower contextual memory
-[Extension VsCode](https://marketplace.visualstudio.com/items?itemName=DocumentationFirst.ddd-documentation-first)
+[![Extension VsCode](https://img.shields.io/badge/vscode-marketplace)](https://marketplace.visualstudio.com/items?itemName=DocumentationFirst.ddd-documentation-first)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 [![Website](https://img.shields.io/badge/website-documentationfirst.ai-58a6ff?style=flat-square)](https://documentationfirst.ai)
 
