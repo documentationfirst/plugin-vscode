@@ -67,7 +67,7 @@ A file prefixed with \`permanent-\` **will not be deleted** when switching tasks
 ├── skills/                ← reusable agent behaviours (permanent)
 ├── steps/                 ← roadmap phases for current vision (reset on new vision)
 └── tasks/
-    ├── done/              ← agent execution reports (reset on new task)
+    ├── done/              ← agent execution reports (permanent-* kept)
     ├── specification/     ← functional specs (permanent-* kept)
     └── technical/         ← technical decisions (permanent-* kept)
 \`\`\`
@@ -589,7 +589,7 @@ export class TemplateGenerator {
   }
 
   private _clearTasks(aiContextRoot: string, specsToDelete: string[] = []): void {
-    // done/ — always cleared entirely
+    // done/ — clear non-permanent reports, keep permanent-* handoff/reference reports
     const doneDir = path.join(aiContextRoot, 'tasks', 'done');
     if (fs.existsSync(doneDir)) {
       fs.readdirSync(doneDir).forEach((f: string) => {

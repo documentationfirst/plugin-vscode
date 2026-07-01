@@ -8,6 +8,7 @@ import { newVision } from './commands/newVision';
 import { newTask } from './commands/newContext'; // newContext.ts repurposed as newTask
 import { newDocument } from './commands/newDocument';
 import { newSkill } from './commands/newSkill';
+import { togglePermanent } from './commands/togglePermanent';
 import { aiContextPath } from './utils/fileUtils';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
@@ -57,6 +58,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }),
     vscode.commands.registerCommand('ddd.newSkill', () =>
       newSkill(treeProvider)
+    ),
+    vscode.commands.registerCommand('ddd.togglePermanent', (item: DddTreeItem) =>
+      togglePermanent(item, treeProvider)
     ),
     vscode.commands.registerCommand('ddd.refresh', () => {
       treeProvider.refresh();

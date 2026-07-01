@@ -3,6 +3,20 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { aiContextPath } from '../utils/fileUtils';
 
+export function isPermanentEligiblePath(filePath: string, aiContextRoot: string): boolean {
+  if (path.extname(filePath) !== '.md') { return false; }
+
+  const parent = path.resolve(path.dirname(filePath));
+  const allowedDirs = [
+    path.join(aiContextRoot, 'skills'),
+    path.join(aiContextRoot, 'tasks', 'done'),
+    path.join(aiContextRoot, 'tasks', 'specification'),
+    path.join(aiContextRoot, 'tasks', 'technical'),
+  ].map(p => path.resolve(p));
+
+  return allowedDirs.includes(parent);
+}
+
 // ─── Tree Item ───────────────────────────────────────────────────────────────
 
 export class DddTreeItem extends vscode.TreeItem {
@@ -26,7 +40,10 @@ export class DddTreeItem extends vscode.TreeItem {
         title: 'Open',
         arguments: [vscode.Uri.file(fullPath)],
       };
-      this.contextValue = 'dddFile';
+      const aiContextRoot = aiContextPath();
+      this.contextValue = aiContextRoot && isPermanentEligiblePath(fullPath, aiContextRoot)
+        ? 'dddPermanentEligibleFile'
+        : 'dddFile';
 
       if (isPermanent) {
         this.iconPath = new vscode.ThemeIcon('bookmark', new vscode.ThemeColor('charts.purple'));

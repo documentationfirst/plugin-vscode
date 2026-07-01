@@ -1,7 +1,7 @@
 {
   "name": "ddd-documentation-first",
   "displayName": "Documentation First - DDD2",
-  "description": "Make your documentation a superpower contextual memory for your AI agent. Documentation-Driven Development v2 for agentic AI.",
+  "description": "Make your documentation a superpower contextual memory for your AI agent. Documentation-Driven Development (DDD) v2 for agentic AI — a superset of Spec-Driven Development (SDD) that hosts and versions your specs.",
   "version": "1.0.3",
   "publisher": "DocumentationFirst",
   "author": "Documentation First <contact@documentationfirst.ai>",
@@ -38,6 +38,10 @@
     "markdown",
     "agent",
     "specification",
+    "sdd",
+    "spec-driven",
+    "spec-driven-development",
+    "spec-kit",
     "knowledge-base",
     "best-practices",
     "development",
@@ -74,6 +78,11 @@
         "command": "ddd.newSkill",
         "title": "Documentation First: New Skill",
         "icon": "$(mortar-board)"
+      },
+      {
+        "command": "ddd.togglePermanent",
+        "title": "Documentation First: Toggle Permanent",
+        "icon": "$(bookmark)"
       },
       {
         "command": "ddd.refresh",
@@ -115,6 +124,11 @@
         {
           "command": "ddd.newSkill",
           "when": "view == dddExplorer && viewItem == dddSkillsFolder",
+          "group": "inline"
+        },
+        {
+          "command": "ddd.togglePermanent",
+          "when": "view == dddExplorer && viewItem == dddPermanentEligibleFile",
           "group": "inline"
         }
       ]

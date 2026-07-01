@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import { DddDetector, Stack } from '../../src/detector/DddDetector';
 import { TemplateGenerator, AgentProfile } from '../../src/generator/TemplateGenerator';
+import { isPermanentEligiblePath } from '../../src/treeview/DddTreeProvider';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -330,6 +331,35 @@ suite('TemplateGenerator — scaffoldNewTask', () => {
       assert.ok(!fs.existsSync(path.join(root, 'tasks', 'done', 'summary.md')));
     } finally {
       cleanup(tmp);
+    }
+  });
+
+  test('preserves permanent files in tasks/done/', () => {
+    const tmp = makeTmpDir();
+    try {
+      const root = path.join(tmp, '.ai_context');
+      defaultInit(root);
+      fs.writeFileSync(path.join(root, 'tasks', 'done', 'permanent-handoff.md'), '# Handoff');
+
+      new TemplateGenerator('').scaffoldNewTask(root, '', 'New task', 'Desc', []);
+
+      assert.ok(fs.existsSync(path.join(root, 'tasks', 'done', 'permanent-handoff.md')));
+    } finally {
+      cleanup(tmp);
+    }
+  });
+
+  test('permanent toggle is eligible only in allowed folders', () => {
+    const root = path.join(makeTmpDir(), '.ai_context');
+    try {
+      assert.strictEqual(isPermanentEligiblePath(path.join(root, 'skills', 'a.md'), root), true);
+      assert.strictEqual(isPermanentEligiblePath(path.join(root, 'tasks', 'done', 'a.md'), root), true);
+      assert.strictEqual(isPermanentEligiblePath(path.join(root, 'tasks', 'specification', 'a.md'), root), true);
+      assert.strictEqual(isPermanentEligiblePath(path.join(root, 'tasks', 'technical', 'a.md'), root), true);
+      assert.strictEqual(isPermanentEligiblePath(path.join(root, 'steps', 'a.md'), root), false);
+      assert.strictEqual(isPermanentEligiblePath(path.join(root, 'vision.md'), root), false);
+    } finally {
+      cleanup(path.dirname(root));
     }
   });
 
